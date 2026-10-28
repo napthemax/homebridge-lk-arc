@@ -1,0 +1,65 @@
+{
+ "_synthetic": true,
+ "cacheTimer": 0,
+ "cacheUpdated": 1761645600,
+ "devices": [
+  {
+   "cacheTimer": 0,
+   "cacheUpdated": 1761645600,
+   "mac": "AA:BB:CC:DD:EE:01",
+   "deviceTitle": {
+    "cacheTimer": 0,
+    "cacheUpdated": 1761645600,
+    "createdAt": 1700000000,
+    "deviceGroup": "arc",
+    "deviceRole": "arc-sense",
+    "deviceType": "arc-sense",
+    "externalId": "",
+    "identity": "AA:BB:CC:DD:EE:01",
+    "realestateId": "re-0001",
+    "realestateMachineId": "rm-1",
+    "zone": {
+     "cacheTimer": 0,
+     "cacheUpdated": 0,
+     "zoneId": "z-1",
+     "zoneName": "Vardagsrum"
+    }
+   },
+   "measurement": {
+    "actuators": [
+     {
+      "1": 0
+     }
+    ],
+    "cacheTimer": 0,
+    "cacheUpdated": 1761645600,
+    "connectionState": "connected",
+    "currentBattery": 87,
+    "currentHumidity": 412,
+    "currentRssi": -67,
+    "currentTemperature": 214,
+    "desiredTemperature": 220,
+    "lastActivityTime": "2026-10-28T09:58:12Z",
+    "mac": "AA:BB:CC:DD:EE:01"
+   },
+   "configuration": {
+    "actuators": [
+     1,
+     2
+    ],
+    "bleBleClients": [],
+    "bleBleNode": false,
+    "busBleClients": [],
+    "busBleNode": false,
+    "byPass": false,
+    "cacheTimer": 0,
+    "cacheUpdated": 1761645600,
+    "hub": "ARCHUB000123",
+    "mac": "AA:BB:CC:DD:EE:01",
+    "overrideActive": false,
+    "overrideLevel": 0,
+    "wired": false
+   }
+  }
+ ]
+}

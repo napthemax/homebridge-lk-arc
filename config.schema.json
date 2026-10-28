@@ -1,0 +1,61 @@
+{
+  "pluginAlias": "LkArc",
+  "pluginType": "platform",
+  "singular": true,
+  "headerDisplay": "LK Systems Arc floor heating, via the LK cloud.",
+  "footerDisplay": "Unofficial plugin. Not affiliated with LK Systems. The password is stored in Homebridge's config.json.",
+  "schema": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "title": "Name",
+        "type": "string",
+        "default": "LK Arc",
+        "required": true
+      },
+      "email": {
+        "title": "Email",
+        "type": "string",
+        "placeholder": "you@example.com",
+        "required": true,
+        "description": "The email address you use in the LK app."
+      },
+      "password": {
+        "title": "Password",
+        "type": "string",
+        "format": "password",
+        "required": true,
+        "description": "The password for that LK account. It is never written to the Homebridge log."
+      },
+      "pollIntervalMinutes": {
+        "title": "Poll interval (minutes)",
+        "type": "integer",
+        "default": 5,
+        "minimum": 1,
+        "description": "How often to read room temperatures from the LK cloud. Minimum 1 minute."
+      },
+      "debug": {
+        "title": "Debug logging",
+        "type": "boolean",
+        "default": false,
+        "description": "Write each HTTP request (method, path, status, duration) to the Homebridge log. Secrets are masked. You can also start Homebridge with -D."
+      },
+      "hideRooms": {
+        "title": "Hide rooms",
+        "type": "array",
+        "items": {
+          "title": "Room name or MAC",
+          "type": "string"
+        },
+        "description": "Optional room names or sensor MAC addresses to leave out of HomeKit."
+      },
+      "encodeMac": {
+        "title": "URL-encode MAC addresses",
+        "type": "boolean",
+        "default": false,
+        "description": "Leave off unless setpoint or measurement calls fail. Off sends the MAC with colons, which is what the LK Home Assistant integration does. On applies encodeURIComponent to the MAC path segment."
+      }
+    },
+    "required": ["email", "password"]
+  }
+}
