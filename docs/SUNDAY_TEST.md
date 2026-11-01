@@ -1,6 +1,8 @@
 # Sunday test — first run on the real LK system
 
-Use this the first time the plugin talks to a real account. Do it from a machine that is allowed to reach `https://link2.lk.nu/` (the Homebridge host, often a Raspberry Pi).
+The first live test passed on 2026-11-01. One LK account, one Raspberry Pi Homebridge install of the npm package, four configured rooms: login worked, all four rooms were discovered with the correct LK names (after the 0.1.1 name fix), current temperatures were shown, and raising a setpoint in the Home app took effect in the LK Arc app.
+
+Use this the next time the plugin talks to a real account. Do it from a machine that is allowed to reach `https://link2.lk.nu/` (the Homebridge host, often a Raspberry Pi).
 
 No production publish is required. Install from a local checkout as described in the README (`npm ci`, `npm run build`, then `npm install /absolute/path/to/homebridge-lk-arc` in the Homebridge directory).
 
