@@ -212,6 +212,15 @@ describe('platform', () => {
       .toBe(Characteristic.StatusFault.GENERAL_FAULT);
 
     expect(living.UUID).toBe(hap.uuid.generate(MAC_SENSE));
+    expect(living.displayName).toBe('Vardagsrum');
+    expect(info?.getCharacteristic(Characteristic.Name).value).toBe('Vardagsrum');
+    expect(livingService.getCharacteristic(Characteristic.Name).value).toBe('Vardagsrum');
+    expect(livingService.getCharacteristic(Characteristic.ConfiguredName).value).toBe('Vardagsrum');
+    expect(living.getService(hap.Service.Battery)?.getCharacteristic(Characteristic.ConfiguredName).value)
+      .toBe('Vardagsrum Battery');
+    const livingHumidity = living.getService(hap.Service.HumiditySensor);
+    expect(livingHumidity?.getCharacteristic(Characteristic.Name).value).toBe('Vardagsrum Humidity');
+    expect(livingHumidity?.getCharacteristic(Characteristic.CurrentRelativeHumidity).value).toBeCloseTo(41.2, 5);
     expect(pending.some((item) => item.ms === 5 * 60 * 1000)).toBe(false);
   });
 
@@ -395,6 +404,100 @@ describe('platform', () => {
     now += 21_000;
     room.apply(measurement);
     expect(target.value).toBeCloseTo(22, 5);
+  });
+});
+
+function setCharacteristicValue(characteristic: { setValue: (value: string, callback: (error?: Error | null) => void) => void }, value: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    characteristic.setValue(value, (error) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve();
+    });
+  });
+}
+
+describe('room names', () => {
+  const mac = 'AA:BB:CC:DD:EE:10';
+
+  function roomOn(accessory: HapAccessory, roomName: string, sent: number[] = []) {
+    return new LkRoomAccessory({
+      hap,
+      log: captureLogger().log,
+      accessory,
+      mac,
+      deviceRole: 'arc-sense',
+      roomName,
+      setTemperature: async () => {
+        sent.push(1);
+      },
+    });
+  }
+
+  it('puts the LK room name on a new accessory, its information service and the thermostat', () => {
+    const accessory = new HapAccessory('placeholder', hap.uuid.generate(mac));
+    const room = roomOn(accessory, 'Vardagsrum');
+    room.apply(fixture<SenseMeasurements>('sense_measurement.json'));
+
+    const { Characteristic, Service } = hap;
+    const info = accessory.getService(Service.AccessoryInformation);
+    const thermostat = accessory.getService(Service.Thermostat);
+    const battery = accessory.getService(Service.Battery);
+    const humidity = accessory.getService(Service.HumiditySensor);
+    expect(accessory.displayName).toBe('Vardagsrum');
+    expect(info?.getCharacteristic(Characteristic.Name).value).toBe('Vardagsrum');
+    expect(thermostat?.getCharacteristic(Characteristic.Name).value).toBe('Vardagsrum');
+    expect(thermostat?.getCharacteristic(Characteristic.ConfiguredName).value).toBe('Vardagsrum');
+    expect(battery?.getCharacteristic(Characteristic.ConfiguredName).value).toBe('Vardagsrum Battery');
+    expect(humidity?.getCharacteristic(Characteristic.ConfiguredName).value).toBe('Vardagsrum Humidity');
+    expect(accessory.context.lkRoomName).toBe('Vardagsrum');
+  });
+
+  it('keeps a Home app ConfiguredName when the LK zone name is unchanged and does not write it to LK', async () => {
+    const accessory = new HapAccessory('Vardagsrum', hap.uuid.generate(`${mac}-keep`));
+    const sent: number[] = [];
+    const room = roomOn(accessory, 'Vardagsrum', sent);
+    const configured = accessory.getService(hap.Service.Thermostat)!
+      .getCharacteristic(hap.Characteristic.ConfiguredName);
+
+    await setCharacteristicValue(configured, 'Living room');
+    expect(sent).toEqual([]);
+    expect(accessory.context.configuredNames).toMatchObject({ thermostat: 'Living room' });
+
+    room.setIdentity('Vardagsrum', 'arc-sense');
+    expect(configured.value).toBe('Living room');
+
+    roomOn(accessory, 'Vardagsrum', sent);
+    expect(accessory.getService(hap.Service.Thermostat)!
+      .getCharacteristic(hap.Characteristic.ConfiguredName).value).toBe('Living room');
+    expect(sent).toEqual([]);
+  });
+
+  it('updates Name and ConfiguredName when the LK zone name changes', async () => {
+    const accessory = new HapAccessory('Vardagsrum', hap.uuid.generate(`${mac}-change`));
+    const room = roomOn(accessory, 'Vardagsrum');
+    room.apply(fixture<SenseMeasurements>('sense_measurement.json'));
+    const configured = accessory.getService(hap.Service.Thermostat)!
+      .getCharacteristic(hap.Characteristic.ConfiguredName);
+    await setCharacteristicValue(configured, 'Living room');
+
+    room.setIdentity('Salong', 'arc-tune');
+
+    const { Characteristic, Service } = hap;
+    expect(accessory.displayName).toBe('Salong');
+    expect(accessory.context.lkRoomName).toBe('Salong');
+    expect(accessory.getService(Service.AccessoryInformation)?.getCharacteristic(Characteristic.Name).value)
+      .toBe('Salong');
+    expect(accessory.getService(Service.Thermostat)?.getCharacteristic(Characteristic.Name).value).toBe('Salong');
+    expect(configured.value).toBe('Salong');
+    expect(accessory.getService(Service.Battery)?.getCharacteristic(Characteristic.ConfiguredName).value)
+      .toBe('Salong Battery');
+    expect(accessory.getService(Service.HumiditySensor)?.getCharacteristic(Characteristic.ConfiguredName).value)
+      .toBe('Salong Humidity');
+    expect(accessory.getService(Service.AccessoryInformation)?.getCharacteristic(Characteristic.Model).value)
+      .toBe('arc-tune');
   });
 });
 

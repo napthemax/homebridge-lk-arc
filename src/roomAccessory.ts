@@ -121,6 +121,7 @@ export class LkRoomAccessory {
   private readonly now: () => number;
   private acceptedTenths: number | null = null;
   private acceptRemoteAfter = 0;
+  private readonly watchedNames = new WeakSet<Service>();
 
   constructor(options: RoomAccessoryOptions) {
     this.hap = options.hap;
@@ -139,10 +140,13 @@ export class LkRoomAccessory {
     const { Service, Characteristic } = this.hap;
     const existing = this.accessory.getService(Service.Thermostat);
     this.thermostat = existing ?? this.accessory.addService(Service.Thermostat, this.roomName);
+    this.thermostat.setPrimaryService(true);
 
     this.thermostat.addOptionalCharacteristic(Characteristic.StatusFault);
     this.thermostat.addOptionalCharacteristic(Characteristic.StatusActive);
     this.thermostat.addOptionalCharacteristic(Characteristic.CurrentRelativeHumidity);
+    this.watchConfiguredName(this.thermostat, 'thermostat');
+    this.syncLkName(this.roomName);
 
     const targetTemperature = this.characteristic(Characteristic.TargetTemperature);
     targetTemperature.setProps({
@@ -185,7 +189,7 @@ export class LkRoomAccessory {
       this.roomName,
     );
 
-    this.writeInformation();
+    this.writeStaticInformation();
   }
 
   handleTargetTemperature(celsius: number): void {
@@ -224,6 +228,7 @@ export class LkRoomAccessory {
     if (typeof measurement.currentHumidity === 'number') {
       const percent = Math.min(100, Math.max(0, tenthsToCelsius(measurement.currentHumidity)));
       this.characteristic(Characteristic.CurrentRelativeHumidity).updateValue(percent);
+      this.writeHumidity(percent);
     }
 
     const offline = looksOffline(measurement.connectionState);
@@ -239,14 +244,8 @@ export class LkRoomAccessory {
 
   setIdentity(roomName: string, deviceRole: string): void {
     this.deviceRole = deviceRole;
-    if (this.roomName !== roomName) {
-      this.roomName = roomName;
-      this.accessory.displayName = roomName;
-      const info = this.accessory.getService(this.hap.Service.AccessoryInformation);
-      info?.updateCharacteristic(this.hap.Characteristic.Name, roomName);
-      this.onRename?.(roomName);
-    }
-    this.writeInformation();
+    this.syncLkName(roomName);
+    this.writeStaticInformation();
   }
 
   dispose(): void {
@@ -262,7 +261,77 @@ export class LkRoomAccessory {
     this.onCommitted?.();
   }
 
-  private writeInformation(): void {
+  /**
+   * Publish the LK zone name only when it is new or it changed.
+   * A ConfiguredName the user set in the Home app is left in place until then,
+   * and that rename is never sent to LK.
+   */
+  private syncLkName(lkRoomName: string): void {
+    this.roomName = lkRoomName;
+    if (!lkRoomName || this.storedLkName() === lkRoomName) {
+      return;
+    }
+    this.accessory.context.lkRoomName = lkRoomName;
+    this.accessory.displayName = lkRoomName;
+    this.publishAccessoryName(lkRoomName);
+    this.publishServiceName(this.thermostat, lkRoomName, 'thermostat');
+    const { Service } = this.hap;
+    const battery = this.accessory.getService(Service.Battery);
+    if (battery) {
+      this.publishServiceName(battery, `${lkRoomName} Battery`, 'battery');
+    }
+    const humidity = this.accessory.getService(Service.HumiditySensor);
+    if (humidity) {
+      this.publishServiceName(humidity, `${lkRoomName} Humidity`, 'humidity');
+    }
+    this.onRename?.(lkRoomName);
+  }
+
+  private storedLkName(): string | undefined {
+    const value = this.accessory.context.lkRoomName;
+    return typeof value === 'string' && value.length > 0 ? value : undefined;
+  }
+
+  private publishAccessoryName(name: string): void {
+    const info = this.accessory.getService(this.hap.Service.AccessoryInformation);
+    info?.setCharacteristic(this.hap.Characteristic.Name, name);
+  }
+
+  private publishServiceName(service: Service, name: string, key: string): void {
+    const { Characteristic } = this.hap;
+    service.displayName = name;
+    service.addOptionalCharacteristic(Characteristic.Name);
+    service.setCharacteristic(Characteristic.Name, name);
+    service.addOptionalCharacteristic(Characteristic.ConfiguredName);
+    this.watchConfiguredName(service, key);
+    // updateValue pushes the LK name without invoking onSet. onSet is only the Home app rename,
+    // which is stored and never sent to LK. setValue would wait on that handler and race it.
+    service.updateCharacteristic(Characteristic.ConfiguredName, name);
+  }
+
+  private watchConfiguredName(service: Service, key: string): void {
+    if (this.watchedNames.has(service)) {
+      return;
+    }
+    this.watchedNames.add(service);
+    const { Characteristic } = this.hap;
+    service.addOptionalCharacteristic(Characteristic.ConfiguredName);
+    service.getCharacteristic(Characteristic.ConfiguredName).onSet((value) => {
+      const names = this.configuredNames();
+      names[key] = String(value);
+      this.accessory.context.configuredNames = names;
+    });
+  }
+
+  private configuredNames(): Record<string, string> {
+    const current = this.accessory.context.configuredNames;
+    if (current && typeof current === 'object' && !Array.isArray(current)) {
+      return current as Record<string, string>;
+    }
+    return {};
+  }
+
+  private writeStaticInformation(): void {
     const { Characteristic, Service } = this.hap;
     const info = this.accessory.getService(Service.AccessoryInformation);
     if (!info) {
@@ -271,7 +340,6 @@ export class LkRoomAccessory {
     info.setCharacteristic(Characteristic.Manufacturer, 'LK Systems');
     info.setCharacteristic(Characteristic.Model, this.deviceRole);
     info.setCharacteristic(Characteristic.SerialNumber, this.mac);
-    info.setCharacteristic(Characteristic.Name, this.roomName);
   }
 
   private writeBattery(measurement: SenseMeasurements): void {
@@ -281,8 +349,13 @@ export class LkRoomAccessory {
     const { Service, Characteristic } = this.hap;
     const percent = clampBatteryPercent(measurement.currentBattery);
     let battery = this.accessory.getService(Service.Battery);
+    const created = !battery;
     if (!battery) {
-      battery = this.accessory.addService(Service.Battery);
+      battery = this.accessory.addService(Service.Battery, `${this.roomName} Battery`);
+    }
+    this.watchConfiguredName(battery, 'battery');
+    if (created) {
+      this.publishServiceName(battery, `${this.roomName} Battery`, 'battery');
     }
     battery.getCharacteristic(Characteristic.BatteryLevel).updateValue(percent);
     const low = Characteristic.StatusLowBattery;
@@ -291,6 +364,22 @@ export class LkRoomAccessory {
     );
     battery.getCharacteristic(Characteristic.ChargingState)
       .updateValue(Characteristic.ChargingState.NOT_CHARGEABLE);
+  }
+
+  private writeHumidity(percent: number): void {
+    const { Service, Characteristic } = this.hap;
+    let humidity = this.accessory.getService(Service.HumiditySensor);
+    const created = !humidity;
+    if (!humidity) {
+      humidity = this.accessory.addService(Service.HumiditySensor, `${this.roomName} Humidity`);
+    }
+    this.watchConfiguredName(humidity, 'humidity');
+    if (created) {
+      this.publishServiceName(humidity, `${this.roomName} Humidity`, 'humidity');
+    }
+    const reading = humidity.getCharacteristic(Characteristic.CurrentRelativeHumidity);
+    reading.setProps({ minValue: 0, maxValue: 100, minStep: 0.1 });
+    reading.updateValue(percent);
   }
 
   private characteristic(type: CharacteristicCtor) {

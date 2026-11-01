@@ -2,7 +2,7 @@
 
 Homebridge plugin that shows each [LK Systems](https://www.lksystems.se/) Arc floor-heating room as a HomeKit thermostat. It talks to the LK cloud at `https://link2.lk.nu/` using the same calls as the LK app.
 
-Version 0.1.0. This is the first cut: one account, polling, and a target temperature. It does not publish itself anywhere.
+Version 0.1.1. This is the first cut: one account, polling, and a target temperature. It does not publish itself anywhere.
 
 The request and response shapes come from [angoyd/ha-lksystems](https://github.com/angoyd/ha-lksystems) (MIT), pinned at commit `eab11b3`, and from LK's published OpenAPI. Thank you to that project for the API work. This plugin is not affiliated with LK Systems.
 
@@ -20,6 +20,10 @@ On each poll the plugin:
 Setting the temperature in Home sends `POST control/arc/sense/{mac}/temperature` with `{"temperature": <tenths>}` after a short debounce. The value is clamped to 5–30 °C and rounded to the nearest 0.5 °C. If it matches the last known setpoint, nothing is sent. Hub structure is read from LK's cache, so for 20 seconds after a successful write the plugin keeps the temperature it just sent if that cache still shows the previous one.
 
 Passwords and tokens are masked in the log.
+
+The Home app shows the LK zone name (`zone.zoneName`). It is written to the accessory, Accessory Information, and the thermostat's Name and ConfiguredName. When a battery or humidity reading is present, those services are named `<room> Battery` and `<room> Humidity`. A name you set in the Home app is kept until that zone name changes in LK, and it is never written back to LK.
+
+If you already paired the rooms with 0.1.0, the names are filled in automatically the first time 0.1.1 runs. Those cached accessories have no saved LK name yet, so Name and ConfiguredName are written once. After that, a Home app rename is left alone. If a room is still blank, remove that accessory in the Home app and add the bridge again.
 
 ## Install for a local test (before this is on npm)
 
@@ -65,6 +69,16 @@ sudo hb-service start
 ```
 
 `npm install -g /var/lib/homebridge/homebridge-lk-arc` is the other option when you intentionally install plugins globally for `hb-service`. After an update, run `npm run build` again and reinstall from the same path so Homebridge picks up `dist/`.
+
+### Update an existing test install
+
+From the checkout used for the first run, pull this branch, rebuild, and reinstall it into Homebridge. Then restart Homebridge (`sudo hb-service restart`, or the restart button in the UI).
+
+```bash
+cd /var/lib/homebridge/homebridge-lk-arc && git pull && npm ci && npm run build && cd /var/lib/homebridge && npm install /var/lib/homebridge/homebridge-lk-arc
+```
+
+On the Raspberry Pi image those commands need to run as the `homebridge` user if that user owns `/var/lib/homebridge`. `sudo hb-service stop` before the install, and `sudo hb-service start` after, is the safe order.
 
 ## Config
 

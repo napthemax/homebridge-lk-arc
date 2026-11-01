@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- Publish the LK zone name on the thermostat (Name and ConfiguredName) so the Home app shows it while pairing and on iOS 16 and later.
+- Keep a rename made in the Home app until the zone name changes in LK. That rename is not written back to LK.
+- Name the optional battery and humidity services `<room> Battery` and `<room> Humidity`. The thermostat still reports humidity as well.
+
 ## 0.1.0
 
 First version.

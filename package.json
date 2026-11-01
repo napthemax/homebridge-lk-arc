@@ -1,6 +1,6 @@
 {
   "name": "homebridge-lk-arc",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "displayName": "LK Arc",
   "description": "Homebridge plugin that exposes LK Systems Arc floor heating rooms as HomeKit thermostats.",
   "license": "MIT",
