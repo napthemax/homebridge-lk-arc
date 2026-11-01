@@ -7,6 +7,8 @@ Homebridge plugin that shows each [LK Systems](https://www.lksystems.se/) Arc fl
 
 Version 0.1.2. One account, polling, and a target temperature.
 
+Tested with one live LK account on a Raspberry Pi Homebridge install (the npm package) on 2026-11-01: four rooms, the LK names, current temperatures, and a setpoint change from the Home app.
+
 The request and response shapes come from [angoyd/ha-lksystems](https://github.com/angoyd/ha-lksystems) (MIT), pinned at commit `eab11b3`, and from LK's published OpenAPI. Thank you to that project for the API work. This plugin is not affiliated with LK Systems.
 
 ## What it does
@@ -162,16 +164,16 @@ Setpoint changes and the discovery summary are logged at info even when debug is
 
 ## Known unknowns
 
-These are copied from the API notes. Nothing here was checked against a live LK account while building 0.1.0. The fixtures under `test/fixtures/` are synthetic.
+Verified against one live LK account (one installation, four rooms) on 2026-11-01: login, room discovery with names, current temperature, and setting the target temperature from the Home app. The items below were not settled by that run.
 
-1. `auth/auth/refresh` was never called by the Home Assistant library. The body and response shape are from LK's OpenAPI only. The units of `accessTokenExpire` / `refreshTokenExpire` are not documented. This plugin decides expiry from the JWT `exp` claim (unix seconds) and, when fewer than five minutes remain, tries refresh and otherwise logs in again.
+1. `auth/auth/refresh` was never called by the Home Assistant library. The body and response shape are from LK's OpenAPI only. The units of `accessTokenExpire` / `refreshTokenExpire` are not documented. This plugin decides expiry from the JWT `exp` claim (unix seconds) and, when fewer than five minutes remain, tries refresh and otherwise logs in again. The 2026-11-01 run did not cover a long session, so refresh versus a full login over time is still unchecked.
 2. The 5.0–30.0 °C range and 0.5 °C step are the Home Assistant client's limits. No setpoint min/max comes back from the API.
 3. `currentBattery` is assumed to be percent. `connectionState` has no documented enum; only a few clearly negative strings raise a fault. The meaning of `actuators`, `overrideActive`, and `overrideLevel` is unknown, and they are not shown in HomeKit.
 4. The `ocp-apim-subscription-key` is the public key shipped in the Home Assistant integration. It is not an account password. Whether LK expects other clients to keep using it is unverified.
 5. Exact rate limits are unpublished. The Home Assistant author was told the limit is per source IP and differs per endpoint.
-6. Whether the MAC in the path must be URL-encoded is unverified. The default matches the library and sends the colon form. `encodeMac` switches it.
+6. Whether the MAC in the path must be URL-encoded is still an open question for every account. The default matches the library and sends the colon form, and that raw MAC worked on the live installation. `encodeMac` switches it. Leave it off unless a call fails.
 7. `service/devices/device/{id}/title` is referenced by the library and was not in the fetched OpenAPI dump. This plugin does not call it.
-8. Real response values were not captured from a live account. Field names follow the OpenAPI schemas and the library; the JSON files used in tests are synthetic.
+8. The JSON files under `test/fixtures/` are synthetic. Field names follow the OpenAPI schemas and the library. Login, discovery with names, current temperature, and setting the target from Home were confirmed on the live account listed above; other response fields were not.
 
 ## Development
 

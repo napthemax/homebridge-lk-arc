@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Note the 2026-11-01 live check (one account, four rooms) in the README and in the Sunday test notes.
+- Run GitHub Actions checkout and setup-node on their current major versions, which use Node 24.
+
 ## 0.1.2
 
 Documentation only. First release published by the GitHub Actions trusted publisher.
