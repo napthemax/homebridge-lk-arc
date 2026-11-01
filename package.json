@@ -1,0 +1,62 @@
+{
+  "name": "homebridge-lk-arc",
+  "version": "0.1.1",
+  "displayName": "LK Arc",
+  "description": "Homebridge plugin that exposes LK Systems Arc floor heating rooms as HomeKit thermostats.",
+  "license": "MIT",
+  "author": "Mats Guldbrand",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/napthemax"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/napthemax/homebridge-lk-arc.git"
+  },
+  "bugs": {
+    "url": "https://github.com/napthemax/homebridge-lk-arc/issues"
+  },
+  "homepage": "https://github.com/napthemax/homebridge-lk-arc#readme",
+  "keywords": [
+    "homebridge-plugin",
+    "homebridge",
+    "lk",
+    "arc",
+    "floor-heating",
+    "thermostat"
+  ],
+  "engines": {
+    "node": "^18.20 || ^20 || ^22",
+    "homebridge": "^1.8.0 || ^2.0.0-beta"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md",
+    "config.schema.json",
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "lint": "eslint src test",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "homebridge": "^1.8.0 || ^2.0.0-beta"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.1",
+    "hap-nodejs": "0.14.3",
+    "homebridge": "^1.8.4",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.9"
+  }
+}

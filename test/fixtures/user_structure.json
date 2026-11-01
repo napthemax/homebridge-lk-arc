@@ -1,0 +1,80 @@
+[
+ {
+  "address": "Exempelgatan 1",
+  "cacheTimer": 0,
+  "cacheUpdated": 1761645600,
+  "city": "Stockholm",
+  "coordinates": "59.33,18.06",
+  "country": "SE",
+  "name": "Hemma",
+  "ownerId": "11111111-2222-3333-4444-555555555555",
+  "realestateId": "re-0001",
+  "status": "active",
+  "zip": "11122",
+  "userPermissions": [
+   {
+    "cacheTimer": 0,
+    "cacheUpdated": 0,
+    "name": "owner",
+    "productPermissionId": "perm-1"
+   }
+  ],
+  "realestateMachines": [
+   {
+    "cacheTimer": 0,
+    "cacheUpdated": 1761645600,
+    "createdAt": 1700000000,
+    "deviceGroup": "arc",
+    "deviceRole": "arc-hub",
+    "deviceType": "arc-hub",
+    "externalId": "",
+    "identity": "ARCHUB000123",
+    "realestateId": "re-0001",
+    "realestateMachineId": "rm-hub",
+    "zone": {
+     "cacheTimer": 0,
+     "cacheUpdated": 0,
+     "zoneId": "z-0",
+     "zoneName": "Hall"
+    }
+   },
+   {
+    "cacheTimer": 0,
+    "cacheUpdated": 1761645600,
+    "createdAt": 1700000000,
+    "deviceGroup": "arc",
+    "deviceRole": "arc-sense",
+    "deviceType": "arc-sense",
+    "externalId": "",
+    "identity": "AA:BB:CC:DD:EE:01",
+    "realestateId": "re-0001",
+    "realestateMachineId": "rm-1",
+    "zone": {
+     "cacheTimer": 0,
+     "cacheUpdated": 0,
+     "zoneId": "z-1",
+     "zoneName": "Vardagsrum"
+    }
+   },
+   {
+    "cacheTimer": 0,
+    "cacheUpdated": 1761645600,
+    "createdAt": 1700000000,
+    "deviceGroup": "arc",
+    "deviceRole": "arc-tune",
+    "deviceType": "arc-sense",
+    "externalId": "",
+    "identity": "AA:BB:CC:DD:EE:02",
+    "realestateId": "re-0001",
+    "realestateMachineId": "rm-2",
+    "zone": {
+     "cacheTimer": 0,
+     "cacheUpdated": 0,
+     "zoneId": "z-2",
+     "zoneName": "Badrum"
+    }
+   }
+  ],
+  "_synthetic": true
+ }
+]
