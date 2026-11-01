@@ -5,6 +5,14 @@
   "description": "Homebridge plugin that exposes LK Systems Arc floor heating rooms as HomeKit thermostats.",
   "license": "MIT",
   "author": "Mats Guldbrand",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/napthemax"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/napthemax/homebridge-lk-arc.git"
