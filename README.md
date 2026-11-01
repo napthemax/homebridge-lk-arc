@@ -1,8 +1,11 @@
 # homebridge-lk-arc
 
+[![npm version](https://img.shields.io/npm/v/homebridge-lk-arc.svg)](https://www.npmjs.com/package/homebridge-lk-arc)
+[![CI](https://github.com/napthemax/homebridge-lk-arc/actions/workflows/ci.yml/badge.svg)](https://github.com/napthemax/homebridge-lk-arc/actions/workflows/ci.yml)
+
 Homebridge plugin that shows each [LK Systems](https://www.lksystems.se/) Arc floor-heating room as a HomeKit thermostat. It talks to the LK cloud at `https://link2.lk.nu/` using the same calls as the LK app.
 
-Version 0.1.1. This is the first cut: one account, polling, and a target temperature. It does not publish itself anywhere.
+Version 0.1.2. One account, polling, and a target temperature.
 
 The request and response shapes come from [angoyd/ha-lksystems](https://github.com/angoyd/ha-lksystems) (MIT), pinned at commit `eab11b3`, and from LK's published OpenAPI. Thank you to that project for the API work. This plugin is not affiliated with LK Systems.
 
@@ -25,9 +28,29 @@ The Home app shows the LK zone name (`zone.zoneName`). It is written to the acce
 
 If you already paired the rooms with 0.1.0, the names are filled in automatically the first time 0.1.1 runs. Those cached accessories have no saved LK name yet, so Name and ConfiguredName are written once. After that, a Home app rename is left alone. If a room is still blank, remove that accessory in the Home app and add the bridge again.
 
-## Install for a local test (before this is on npm)
+## Install
 
-You need Node.js 18.20, 20, or 22, and Homebridge 1.8 (2.0 beta should work). Build the plugin, then point Homebridge at that directory. Do not `npm publish`.
+You need Node.js 18.20, 20, or 22, and Homebridge 1.8 (2.0 beta should work).
+
+In the Homebridge UI, open Plugins and search for **LK Arc** or `homebridge-lk-arc`. From a shell:
+
+```bash
+npm install -g homebridge-lk-arc
+```
+
+On a machine that uses `hb-service` (the usual Raspberry Pi image):
+
+```bash
+sudo hb-service add homebridge-lk-arc
+```
+
+Restart Homebridge if it does not restart on its own. Then add the platform (the UI form comes from `config.schema.json`) or paste the block below into `config.json`.
+
+To update later, install the package again the same way, or use the update button in the Plugins tab.
+
+## Development / testing unreleased code
+
+Use this when you want a git checkout instead of the published package. Do not `npm publish` from that checkout unless you are cutting a release (see `docs/RELEASING.md`).
 
 ```bash
 git clone https://github.com/napthemax/homebridge-lk-arc.git
@@ -51,7 +74,7 @@ cd ~/.homebridge
 npm link homebridge-lk-arc
 ```
 
-Restart Homebridge, then add the platform (the UI form comes from `config.schema.json`) or paste the block below into `config.json`.
+Restart Homebridge after the install.
 
 ### Raspberry Pi / hb-service
 
@@ -68,11 +91,11 @@ sudo -u homebridge npm install /var/lib/homebridge/homebridge-lk-arc
 sudo hb-service start
 ```
 
-`npm install -g /var/lib/homebridge/homebridge-lk-arc` is the other option when you intentionally install plugins globally for `hb-service`. After an update, run `npm run build` again and reinstall from the same path so Homebridge picks up `dist/`.
+`npm install -g /var/lib/homebridge/homebridge-lk-arc` is the other option when you intentionally install that checkout globally for `hb-service`. After an update, run `npm run build` again and reinstall from the same path so Homebridge picks up `dist/`.
 
 ### Update an existing test install
 
-From the checkout used for the first run, pull this branch, rebuild, and reinstall it into Homebridge. Then restart Homebridge (`sudo hb-service restart`, or the restart button in the UI).
+From the checkout used for the first run, pull, rebuild, and reinstall it into Homebridge. Then restart Homebridge (`sudo hb-service restart`, or the restart button in the UI).
 
 ```bash
 cd /var/lib/homebridge/homebridge-lk-arc && git pull && npm ci && npm run build && cd /var/lib/homebridge && npm install /var/lib/homebridge/homebridge-lk-arc
@@ -135,7 +158,7 @@ Setpoint changes and the discovery summary are logged at info even when debug is
 | Values not updating | Leave debug on for one poll. A warning that ends with "Keeping last known values" means the last good reading is still on the accessory. Hub structure failures fall back to a per-sensor read. |
 | Setpoint not applied | Compare the Home app with the LK app after ~10 seconds (the write is debounced 1.5 seconds, then one refresh runs). The plugin does not POST when the rounded value already matches the cloud. A 400 in the log is the cloud rejecting the body. |
 | MAC encoding | If measurement or setpoint URLs fail and the path contains a raw colon, set `"encodeMac": true` and restart. Turn it back off if the encoded form is what fails. |
-| Plugin missing in the UI | `npm run build` must have produced `dist/index.js`, and Homebridge must have been restarted after `npm install` of that directory. |
+| Plugin missing in the UI | Search for `homebridge-lk-arc` in Plugins, or run `sudo hb-service add homebridge-lk-arc`, then restart. For a git checkout, `npm run build` must have produced `dist/index.js` before you install that directory. |
 
 ## Known unknowns
 
@@ -159,7 +182,7 @@ npm run build
 npm test
 ```
 
-Tests use the synthetic fixtures and never call LK. CI runs lint, `tsc`, and the tests on Node 20 and 22. There is no publish job.
+Tests use the synthetic fixtures and never call LK. CI runs lint, `tsc`, and the tests on Node 20 and 22. Publishing is a separate workflow that runs only when a `vX.Y.Z` tag is pushed.
 
 ## License
 

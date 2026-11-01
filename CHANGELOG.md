@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+Documentation only. First release published by the GitHub Actions trusted publisher.
+
+- The README now leads with installing from the Homebridge plugin search or npm. Building from a git checkout is documented as a way to test unreleased code.
+
 ## 0.1.1
 
 - Publish the LK zone name on the thermostat (Name and ConfiguredName) so the Home app shows it while pairing and on iOS 16 and later.
